@@ -1,0 +1,12 @@
+{
+  "name": "health-care",
+  "version": "1.0.0",
+  "description": "A simple patient service API",
+  "main": "patient-service.js",
+  "scripts": {
+    "start": "node patient-service.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

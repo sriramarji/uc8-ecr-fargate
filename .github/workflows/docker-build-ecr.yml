@@ -1,0 +1,50 @@
+name: Build and Push to Amazon ECR
+
+on:
+  workflow_dispatch:
+  #push:
+  #  branches: [ main ]
+
+permissions:
+  id-token: write
+  contents: read
+  
+jobs:
+  terraform:
+    name: Docker Build & Push to ECR
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: appointment-service
+      AWS_REGION: us-east-1
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::211125784755:role/uc1-alb-oidc
+          aws-region: ${{ env.AWS_REGION }}
+       
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Ensure ECR Repository Exists
+        run: |
+          aws ecr describe-repositories --repository-names "$IMAGE_NAME" || \
+          aws ecr create-repository --repository-name "$IMAGE_NAME"
+          
+      - name: Build Docker image
+        run: docker build -t $IMAGE_NAME -f ./appointment/Dockerfile ./appointment
+
+      - name: Tag Docker image
+        run: |
+          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          docker tag $IMAGE_NAME:latest $ECR_REGISTRY/$IMAGE_NAME:latest
+      
+      - name: Push Docker image to ECR
+        run: |
+          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          docker push $ECR_REGISTRY/$IMAGE_NAME:latest

@@ -1,4 +1,4 @@
-resource "aws_ecs_cluster" "this" {
+resource "aws_ecs_cluster" "myecs" {
   name = var.cluster_name
 }
 
@@ -61,16 +61,16 @@ resource "aws_security_group" "ecs_sg" {
   vpc_id = var.vpc_id
 
   ingress {
-    from_port   = 3000
-    to_port     = 3000
-    protocol    = "tcp"
+    from_port       = 3000
+    to_port         = 3000
+    protocol        = "tcp"
     security_groups = [var.alb_security_group_id]
   }
 
   ingress {
-    from_port   = 3001
-    to_port     = 3001
-    protocol    = "tcp"
+    from_port       = 3001
+    to_port         = 3001
+    protocol        = "tcp"
     security_groups = [var.alb_security_group_id]
   }
 
@@ -84,13 +84,13 @@ resource "aws_security_group" "ecs_sg" {
 
 # ECS Task Definition (Single task definition for both containers)
 resource "aws_ecs_task_definition" "healthcare_task" {
-  family             = "healthcare-task"
-  network_mode       = "awsvpc"
+  family                   = "healthcare-task"
+  network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                = "512"
-  memory             = "1024"
-  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
-  task_role_arn      = aws_iam_role.ecs_task_execution_role.arn
+  cpu                      = "512"
+  memory                   = "1024"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
     {
@@ -116,10 +116,10 @@ resource "aws_ecs_task_definition" "healthcare_task" {
       }
     },
     {
-      name = "appointment-container"
-      image = "154767946691.dkr.ecr.us-east-1.amazonaws.com/eks-repo:appointment"
-      cpu = 256
-      memory = 512
+      name      = "appointment-container"
+      image     = "211125784755.dkr.ecr.us-east-1.amazonaws.com/appointment-service:latest"
+      cpu       = 256
+      memory    = 512
       essential = true
       portMappings = [
         {
@@ -131,8 +131,8 @@ resource "aws_ecs_task_definition" "healthcare_task" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group = aws_cloudwatch_log_group.ecs_log_group.name
-          awslogs-region = "us-east-1"
+          awslogs-group         = aws_cloudwatch_log_group.ecs_log_group.name
+          awslogs-region        = "us-east-1"
           awslogs-stream-prefix = "appointment"
         }
       }
@@ -143,14 +143,14 @@ resource "aws_ecs_task_definition" "healthcare_task" {
 # ECS Service (Single service to manage the combined task)
 resource "aws_ecs_service" "healthcare_service" {
   name            = "healthcare-service"
-  cluster         = aws_ecs_cluster.ecs_cluster.id
+  cluster         = aws_ecs_cluster.myecs.id
   task_definition = aws_ecs_task_definition.healthcare_task.arn
   launch_type     = "FARGATE"
   desired_count   = 2
 
   network_configuration {
-    subnets         = var.private_subnet_ids
-    security_groups = [aws_security_group.ecs_sg.id]
+    subnets          = var.private_subnet_ids
+    security_groups  = [aws_security_group.ecs_sg.id]
     assign_public_ip = false
   }
 
@@ -167,4 +167,10 @@ resource "aws_ecs_service" "healthcare_service" {
   }
 
   depends_on = [var.alb_listener_arn]
+}
+
+# CloudWatch Log Group
+resource "aws_cloudwatch_log_group" "ecs_log_group" {
+  name              = "/ecs/ecs-task"
+  retention_in_days = 7
 }

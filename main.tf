@@ -24,13 +24,13 @@ module "alb" {
 }
 
 module "ecs" {
-    source = "./modules/ecs"
+  source = "./modules/ecs"
 
-    cluster_name = my-cluster
-    vpc_id = module.vpc.vpc_id
-    alb_security_group_id = module.alb.alb-security_group-id
-    private_subnet_ids = module.vpc.private_subnet_ids
-    patient_target_group_arn = module.alb.patient-targetgroup-arn
-    appointment_target_group_arn = module.alb.appointment-targetgroup-arn
-    alb_listener_arn = module.alb.alb-listener-arn
+  cluster_name                 = "my-cluster"
+  vpc_id                       = module.vpc.vpc_id
+  alb_security_group_id        = module.alb.alb-security_group-id
+  private_subnet_ids           = module.vpc.private_subnet_ids
+  patient_target_group_arn     = module.alb.patient-targetgroup-arn
+  appointment_target_group_arn = module.alb.appointment-targetgroup-arn
+  alb_listener_arn             = module.alb.alb-listener-arn
 }

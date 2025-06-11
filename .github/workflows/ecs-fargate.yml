@@ -33,6 +33,7 @@ jobs:
           unzip tflint_linux_amd64.zip
           sudo mv tflint /usr/local/bin/
           tflint --version
+
       - name: Run TFLint
         run: tflint --init && tflint -f compact
         working-directory: ./
@@ -41,9 +42,28 @@ jobs:
         run: |
           pip3 install --upgrade pip
           pip3 install checkov
+
       - name: Run Checkov
         run: checkov -d . --framework terraform --soft-fail
         working-directory: ./
+
+      - name: Install terraform-docs
+        run: |
+          curl -sSLo terraform-docs.tar.gz https://terraform-docs.io/dl/v0.20.0/terraform-docs-v0.20.0-linux-amd64.tar.gz
+          tar -xzf terraform-docs.tar.gz
+          chmod +x terraform-docs
+          sudo mv terraform-docs /usr/local/bin/
+
+      - name: Generate Terraform Docs
+        run: terraform-docs markdown table . > README.md
+
+      - name: Commit Terraform Docs
+        run: |
+          git config --global user.name "sriramarji"
+          git config --global user.email "bhaskarsaisriram@gmail.com"
+          git add README.md
+          git commit -m "Update Terraform docs [skip ci]" || echo "No changes to commit"
+          git push
     
   terraform:
     name: Terraform ${{ github.event.inputs.action }}

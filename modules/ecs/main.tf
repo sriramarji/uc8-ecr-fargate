@@ -94,10 +94,10 @@ resource "aws_ecs_task_definition" "healthcare_task" {
 
   container_definitions = jsonencode([
     {
-      name = "patient-container"
-      image = "211125784755.dkr.ecr.us-east-1.amazonaws.com/patient-service:latest"
-      cpu = 256
-      memory = 512
+      name      = "patient-container"
+      image     = "211125784755.dkr.ecr.us-east-1.amazonaws.com/patient-service:latest"
+      cpu       = 256
+      memory    = 512
       essential = true
       portMappings = [
         {
@@ -109,8 +109,8 @@ resource "aws_ecs_task_definition" "healthcare_task" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group = aws_cloudwatch_log_group.ecs_log_group.name
-          awslogs-region = "us-east-1"
+          awslogs-group         = aws_cloudwatch_log_group.ecs_log_group.name
+          awslogs-region        = "us-east-1"
           awslogs-stream-prefix = "patient"
         }
       }
